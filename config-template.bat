@@ -21,21 +21,6 @@ rem     bw login
 rem     bw list organizations --session <session_id>
 set "ORGANIZATION_ID="
 
-rem BW_SERVER_URL (optional)
-rem   (if not specified bw.exe will its default)
-rem   If set, the script will run:
-rem     bw config server <BW_SERVER_URL>
-rem   Use this for self-hosted / EU / non-default endpoints.
-rem
-rem Examples:
-rem   https://vault.bitwarden.com
-rem   https://vault.bitwarden.eu
-rem   https://bw.yourdomain.tld
-rem
-rem Official CLI docs (server config):
-rem   https://bitwarden.com/help/cli/
-set "BW_SERVER_URL="
-
 rem B_VAULTS
 rem   Space-separated symbolic vault names.
 rem   Example: H W
@@ -89,3 +74,4 @@ set "W_MASTER_PW="
 rem ============================================================
 rem End of configuration
 rem ============================================================
+
