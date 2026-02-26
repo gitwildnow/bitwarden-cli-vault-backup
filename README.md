@@ -36,13 +36,12 @@ Do not store credentials or exports on unencrypted storage.
 Both `bw.exe` and `jq.exe` must be available on your system PATH.
 
 ## Steps to make backups
-(after you setup below)
 
 1. Mount your veracrypt volume.
 2. In Windows explorer double-click your backupBitwarden.bat file.
 3. Let the script complete.
-4. Unmount your VeraCrypt volume.
 ![Example output](docs/backupScreenshot.png)
+4. Unmount your VeraCrypt volume.
 
 ## Setup
 
