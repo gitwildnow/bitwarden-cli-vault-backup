@@ -1,0 +1,5 @@
+config.bat
+bwExports/
+debug/
+*.json
+*.txt
