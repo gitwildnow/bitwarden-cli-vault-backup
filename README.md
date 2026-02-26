@@ -62,6 +62,15 @@ Both `bw.exe` and `jq.exe` must be available on your system PATH.
 backupBitwarden.bat
 ```
 
+## Select Bitwarden Server
+The script will show you its selected server before doing much else so you can confirm.
+If you use the .edu server or a selfhosted instance, use the bw.exe command line tool to specify your server:
+
+```text
+bw <BITWARDEN URL>
+```
+(give the URL a trailing backslash)
+
 ## Output structure
 
 Exports are written to:
