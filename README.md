@@ -42,6 +42,7 @@ Both `bw.exe` and `jq.exe` must be available on your system PATH.
 2. In Windows explorer double-click your backupBitwarden.bat file.
 3. Let the script complete.
 4. Unmount your VeraCrypt volume.
+![Example output](docs/backupScreenshot.png)
 
 ## Setup
 
