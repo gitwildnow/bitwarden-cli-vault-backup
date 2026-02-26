@@ -1,5 +1,5 @@
 # bitwarden-cli-vault-backup
-Windows batch file to back up multiple Bitwarden vaults (and optional organization vault) using the Bitwarden CLI — without manual login, 2FA prompts, or interactive input.
+Windows batch file to back up multiple Bitwarden vaults (and optional organization vault) using the Bitwarden CLI — without manual login, 2FA prompts, etc. Just double-click the file in Windows Explorer and you're done.
 
 ## Overview
 
