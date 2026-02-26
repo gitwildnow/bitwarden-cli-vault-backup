@@ -69,7 +69,7 @@ If you use the .edu server or a selfhosted instance, use the bw.exe command line
 ```text
 bw <BITWARDEN URL>
 ```
-(give the URL a trailing backslash)
+(give the URL a trailing slash)
 
 ## Output structure
 
