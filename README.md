@@ -43,6 +43,8 @@ Both `bw.exe` and `jq.exe` must be available on your system PATH.
 ![Example output](docs/backupScreenshot.png)
 4. Unmount your VeraCrypt volume.
 
+Note: If the script does not show *No update available* then it will show you info about a pending update. Continue with an older version of the CLI if you like by just pressing [Enter]. But be aware that older CLIs might not export passcodes or other recent additions to the scope of a Bitwarden vault.
+
 ## Setup
 
 1. Clone or download this repository.
