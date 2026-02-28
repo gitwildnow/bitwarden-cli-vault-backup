@@ -57,7 +57,7 @@ rem   - These are NOT your email address.
 rem   - These are NOT your master password.
 rem   - Keep these values private.
 rem   - Store this config file only on encrypted media.
-rem ------------------------------------------------------------rem ----- Vault H -----
+rem ------------------------------------------------------------
 
 rem ----- Vault H -----
 set "H_NAME=YourNameHere"
@@ -74,4 +74,5 @@ set "W_MASTER_PW="
 rem ============================================================
 rem End of configuration
 rem ============================================================
+
 
