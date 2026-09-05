@@ -64,15 +64,6 @@ Note: If the script does not show *No update available* then it will show you in
 backupBitwarden.bat
 ```
 
-## Select Bitwarden Server
-The script will show you its selected server before doing much else so you can confirm.
-If you use the .edu server or a selfhosted instance, use the bw.exe command line tool to specify your server:
-
-```text
-bw <BITWARDEN URL>
-```
-(give the URL a trailing slash)
-
 ## Output structure
 
 Exports are written to:
