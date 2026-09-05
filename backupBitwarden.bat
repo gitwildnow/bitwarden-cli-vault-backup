@@ -63,9 +63,11 @@ if "%CONFIG_ERROR%"=="1" (
 )
 echo(
 :: Generate timestamp directory with YYYYMMDD_HHMM format
-set "B_TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%"
-:: Replace leading space in hour with zero
-set "B_TIMESTAMP=%B_TIMESTAMP: =0%"
+for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmm"`) do set "B_TIMESTAMP=%%T"
+if not defined B_TIMESTAMP (
+    echo ERROR: could not determine timestamp.
+    goto terminate
+)
 set "B_TIMESTAMP_DIR=%B_OUTPUT_PARENT%\exp_%B_TIMESTAMP%"
 @echo This script saves unencrypted json exports of the Bitwarden vaults.
 @echo (target only encrypted media such as VeraCrypt volume)
@@ -78,7 +80,8 @@ rem set private destination for CLI output (only if not already defined)
 if defined BITWARDENCLI_APPDATA_DIR (
     @echo Warning: BITWARDENCLI_APPDATA_DIR already set - make sure to a secure location.
 ) else (
-    set "BITWARDENCLI_APPDATA_DIR=%B_TIMESTAMP_DIR%\debug\CLI_APPDATA_DIR"
+    if exist "%B_OUTPUT_PARENT%\_cli_appdata" rd /s /q "%B_OUTPUT_PARENT%\_cli_appdata"
+    set "BITWARDENCLI_APPDATA_DIR=%B_OUTPUT_PARENT%\_cli_appdata"
 )
 @echo BITWARDENCLI_APPDATA_DIR=%BITWARDENCLI_APPDATA_DIR%
 if not exist "%BITWARDENCLI_APPDATA_DIR%" mkdir "%BITWARDENCLI_APPDATA_DIR%" || goto error-exit
@@ -97,14 +100,16 @@ if defined BW_SERVER_DISPLAY (
 )
 bw update
 @echo(
-@echo Please ctrl-c/abort and apply update if pending.
+@echo If an update is pending, answer N, apply it, and re-run.
 @echo https://bitwarden.com/help/cli/
-pause
+choice /c YN /n /m "Continue with the current CLI version? [Y/N] "
+if errorlevel 2 goto abort-preflight
 bw logout >nul 2>&1
 @echo(
 :: Loop thru each vault to export
 setlocal enabledelayedexpansion
 set "count=0"
+set "VERIFY_ERROR=0"
 for %%V in (%B_VAULTS%) do (
     set /a count+=1
     set "B_NAME=!%%V_NAME!"
@@ -112,7 +117,6 @@ for %%V in (%B_VAULTS%) do (
     set "B_ORG_JSON=!B_TIMESTAMP_DIR!\organization.json"
     set "B_ATTACHMENT_PATH=!B_TIMESTAMP_DIR!\attachments"
     set "B_DEBUG_PATH=!B_TIMESTAMP_DIR!\debug"
-													
     set "B_MASTER_PW=!%%V_MASTER_PW!"
     set "BW_CLIENTID=!%%V_CLIENTID!"
     set "BW_CLIENTSECRET=!%%V_CLIENTSECRET!"
@@ -121,7 +125,9 @@ for %%V in (%B_VAULTS%) do (
     @echo Logging in to Bitwarden as !B_NAME! using API credentials.
     bw login --apikey --raw
     if errorlevel 1 goto error-exit
-    for /f %%i in ('bw unlock !B_MASTER_PW! --raw 2^>nul') do set BW_SESSION=%%i
+    rem Clear any session token carried over from the previous vault
+    set "BW_SESSION="
+    for /f %%i in ('bw unlock --passwordenv B_MASTER_PW --raw 2^>nul') do set BW_SESSION=%%i
     if not defined BW_SESSION (
         @echo Failed to unlock Bitwarden. Invalid PW?
         goto error-exit
@@ -131,14 +137,12 @@ for %%V in (%B_VAULTS%) do (
     if errorlevel 1 goto error-exit
     @echo(
     if not exist "!B_TIMESTAMP_DIR!" mkdir "!B_TIMESTAMP_DIR!" || goto error-exit
-								   
     @echo Export !B_NAME! vault.
     bw export --output "!B_VAULT_JSON!" --format json --session !BW_SESSION!
     if errorlevel 1 goto error-exit
     @echo(
     @echo Export attachments...please wait
     if not exist "!B_ATTACHMENT_PATH!" mkdir "!B_ATTACHMENT_PATH!" || goto error-exit
-								   
     rem Dump items once
 	bw list items --session !BW_SESSION! > "!B_DEBUG_PATH!\items_!B_NAME!.json"
     if errorlevel 1 goto error-exit
@@ -159,6 +163,29 @@ for %%V in (%B_VAULTS%) do (
         if errorlevel 1 goto error-exit
     )
     @echo(
+    rem ---- Verify this vault's export ----
+    set "V_ITEMS="
+    for /f "usebackq delims=" %%N in (`jq -r ".items | length" "!B_VAULT_JSON!" 2^>nul`) do set "V_ITEMS=%%N"
+    if not defined V_ITEMS set "V_ITEMS=0"
+    if !V_ITEMS! gtr 0 (
+        @echo Verify !B_NAME!: !V_ITEMS! items in export.
+    ) else (
+        @echo VERIFY FAIL: !B_NAME!.json missing, unreadable, or empty.
+        set "VERIFY_ERROR=1"
+    )
+    set /a ATT_EXPECT=0
+    set /a ATT_FOUND=0
+    for /f "usebackq tokens=1,2,* delims=~" %%I in ("!B_DEBUG_PATH!\attlist_!B_NAME!.txt") do (
+        set /a ATT_EXPECT+=1
+        if exist "!B_ATTACHMENT_PATH!\%%I\%%K" set /a ATT_FOUND+=1
+    )
+    if !ATT_FOUND! equ !ATT_EXPECT! (
+        @echo Verify !B_NAME!: !ATT_FOUND! of !ATT_EXPECT! attachments present.
+    ) else (
+        @echo VERIFY FAIL: !B_NAME! attachments - expected !ATT_EXPECT!, found !ATT_FOUND!.
+        set "VERIFY_ERROR=1"
+    )
+    @echo(
     if !count! equ 1 (
         if defined ORGANIZATION_ID (
             @echo Export organization vault.
@@ -171,8 +198,18 @@ for %%V in (%B_VAULTS%) do (
     if errorlevel 1 goto error-exit
 @echo(
 )
+@echo(
+if "!VERIFY_ERROR!"=="1" (
+    @echo *** VERIFICATION FAILED - see VERIFY FAIL messages above. Do not trust this backup. ***
+    goto error-exit
+)
+@echo Verification passed - item and attachment counts as expected.
 @echo All listed vaults and their attachments exported. To exit,
 endlocal
+goto terminate
+:abort-preflight
+@echo(
+@echo Aborted before export. Nothing was written.
 goto terminate
 :error-exit
 @echo(
@@ -181,4 +218,5 @@ bw logout
 :terminate
 endlocal
 :: remove this if you always run at command line and not double-click bat file.
+@echo(
 pause
