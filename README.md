@@ -92,8 +92,12 @@ The `debug` folder contains intermediate files used to enumerate attachments.
 
 ## Notes
 
-- The Bitwarden CLI remembers its last configured server endpoint.
-- This script does not modify the CLI server configuration.
+- The script keeps the Bitwarden CLI's own state (endpoint, account, session,
+cached vault) in `<output-parent>\_cli_appdata`, wiped at the start of every
+run. It never uses or modifies your normal `bw` configuration, and any
+`BITWARDENCLI_APPDATA_DIR` you have set is ignored. Because the store is
+discarded each run, a manually configured `bw config server` does not persist —
+use `BW_SERVER_URL` in `config.bat` to target a self-hosted or EU server.
 - Attachment downloads may take time for large vaults.
 - This script is provided as-is. Review the code before using it in your environment.
 
