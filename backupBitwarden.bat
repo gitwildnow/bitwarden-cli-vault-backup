@@ -76,13 +76,10 @@ set "B_TIMESTAMP_DIR=%B_OUTPUT_PARENT%\exp_%B_TIMESTAMP%"
 pause
 
 @echo Checking for pending updates to the CLI...
-rem set private destination for CLI output (only if not already defined)
-if defined BITWARDENCLI_APPDATA_DIR (
-    @echo Warning: BITWARDENCLI_APPDATA_DIR already set - make sure to a secure location.
-) else (
-    if exist "%B_OUTPUT_PARENT%\_cli_appdata" rd /s /q "%B_OUTPUT_PARENT%\_cli_appdata"
-    set "BITWARDENCLI_APPDATA_DIR=%B_OUTPUT_PARENT%\_cli_appdata"
-)
+rem Keep CLI state private to this script - never disturb the user's bw config
+if defined BITWARDENCLI_APPDATA_DIR @echo Note: ignoring your BITWARDENCLI_APPDATA_DIR for this run.
+if exist "%B_OUTPUT_PARENT%\_cli_appdata" rd /s /q "%B_OUTPUT_PARENT%\_cli_appdata"
+set "BITWARDENCLI_APPDATA_DIR=%B_OUTPUT_PARENT%\_cli_appdata"
 @echo BITWARDENCLI_APPDATA_DIR=%BITWARDENCLI_APPDATA_DIR%
 if not exist "%BITWARDENCLI_APPDATA_DIR%" mkdir "%BITWARDENCLI_APPDATA_DIR%" || goto error-exit
 rem override default bitwarden.com if necessary
